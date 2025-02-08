@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Servidor PHP-FPM
+  app:
+    build: .
+    container_name: recruit-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    networks:
+      - recruit-network
+
+  # Servidor Nginx
+  webserver:
+    image: nginx:alpine
+    container_name: recruit-webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - recruit-network
+    depends_on:
+      - app
+
+  # Banco de dados MySQL
+  db:
+    image: mysql:5.7
+    container_name: recruit-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: recruit
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - recruit-network
+
+  # Executa migrações e seeders (opcional)
+  migrate:
+    build: .
+    container_name: recruit-migrate
+    depends_on:
+      - db
+    entrypoint: ["php", "artisan", "migrate", "--seed"]
+    networks:
+      - recruit-network
+
+volumes:
+  dbdata:
+
+networks:
+  recruit-network:
+    driver: bridge
