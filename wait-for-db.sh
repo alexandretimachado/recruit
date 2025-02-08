@@ -1,16 +1,14 @@
 #!/bin/bash
 
-# wait-for-db.sh
-set -e
+HOST="$1"
+PORT=3306
 
-host="$1"
-shift
-cmd="$@"
+echo "Aguardando banco de dados ($HOST:$PORT) ficar disponível..."
 
-until mysql -h "$host" -u root -p"$MYSQL_ROOT_PASSWORD" -e 'SELECT 1'; do
-  >&2 echo "MySQL is unavailable - sleeping"
-  sleep 1
+while ! nc -z "$HOST" "$PORT"; do
+  echo "MySQL está indisponível - aguardando..."
+  sleep 2
 done
 
->&2 echo "MySQL is up - executing command"
-exec $cmd
+echo "MySQL está pronto!"
+exec "${@:2}"
