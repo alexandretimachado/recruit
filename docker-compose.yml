@@ -18,7 +18,7 @@ services:
     container_name: recruit-webserver
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8080:80"  # Mapeia a porta 8080 do host para a porta 80 do container
     volumes:
       - .:/var/www/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
@@ -47,7 +47,9 @@ services:
     container_name: recruit-migrate
     depends_on:
       - db
-    entrypoint: ["php", "artisan", "migrate", "--seed"]
+    entrypoint: ["./wait-for-db.sh", "db", "php", "artisan", "migrate", "--seed"]
+    environment:
+        MYSQL_ROOT_PASSWORD: secret
     networks:
       - recruit-network
 
